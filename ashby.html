@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ashby Job Board</title>
+  <style>
+    :root {
+      --primary: #1e40af;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-600: #4b5563;
+      --gray-800: #1f2937;
+      --sidebar-width: 380px;
+    }
+
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-800);
+      line-height: 1.5;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    h1 { font-size: 1.8rem; font-weight: 700; }
+
+    .filters {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .filter-row label { font-weight: 500; color: var(--gray-600); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    th {
+      background: var(--gray-200);
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+    }
+
+    th:hover { background: #d1d5db; }
+
+    th::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9em;
+      color: var(--gray-600);
+      opacity: 0.4;
+    }
+
+    th.sorted-asc::after { content: '↑'; opacity: 1; color: var(--primary); }
+    th.sorted-desc::after { content: '↓'; opacity: 1; color: var(--primary); }
+
+    tr:hover { background: #f8fafc; cursor: pointer; }
+
+    .pagination-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .pagination { display: flex; gap: 4px; }
+
+    .page-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .page-btn:hover { background: var(--gray-100); }
+    .page-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: -var(--sidebar-width);
+      width: var(--sidebar-width);
+      height: 100%;
+      background: white;
+      box-shadow: -8px 0 30px rgba(0,0,0,0.2);
+      transition: right 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 24px;
+      pointer-events: none;
+      display: none;
+    }
+
+    .sidebar.open {
+      right: 0;
+      pointer-events: auto;
+      display: block;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .close-sidebar { font-size: 2rem; cursor: pointer; color: var(--gray-600); }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 900;
+      display: none;
+    }
+
+    .overlay.show { display: block; }
+
+    .status { color: var(--gray-600); font-size: 0.95rem; }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+    }
+
+    .btn:hover { background: #1e3a8a; }
+
+    input, select {
+      padding: 8px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .filter-row { grid-template-columns: 1fr; }
+      .sidebar { width: 85vw; right: -85vw; }
+      :root { --sidebar-width: 85vw; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1 id="title">Job Board — Whatnot</h1>
+    <div>
+      <button class="btn" onclick="changeOrg()">Change Org</button>
+      <span class="status" id="status">Ready</span>
+    </div>
+  </header>
+
+  <div class="filters">
+    <div class="filter-row">
+      <label>Team</label>
+      <select id="team"><option value="">All</option></select>
+    </div>
+    <div class="filter-row">
+      <label>Location</label>
+      <select id="location"><option value="">All</option></select>
+    </div>
+    <div class="filter-row">
+      <label>Workplace Type</label>
+      <select id="workplace"><option value="">All</option></select>
+    </div>
+    <div class="filter-row">
+      <label>Employment Type</label>
+      <select id="employment"><option value="">All</option></select>
+    </div>
+    <div class="filter-row">
+      <label>Date Posted</label>
+      <select id="date">
+        <option value="all">All</option>
+        <option value="24h">Last 24 hours</option>
+        <option value="3d">Last 3 days</option>
+        <option value="7d">Last week</option>
+        <option value="30d">Last month</option>
+      </select>
+    </div>
+    <div class="filter-row">
+      <label>Search</label>
+      <input type="text" id="search" placeholder="Title, team...">
+    </div>
+    <div style="margin-top:16px; display:flex; gap:12px;">
+      <button class="btn" onclick="loadJobs()">Refresh</button>
+      <button class="btn" style="background:#6b7280;" onclick="clearFilters()">Clear Filters</button>
+    </div>
+  </div>
+
+  <table id="job-table">
+    <thead>
+      <tr>
+        <th data-sort="title">Job Title</th>
+        <th data-sort="team">Team</th>
+        <th data-sort="location">Location</th>
+        <th data-sort="workplace">Workplace Type</th>
+        <th data-sort="employment">Employment Type</th>
+        <th data-sort="compensation">Compensation</th>
+        <th data-sort="posted">Date Posted</th>
+      </tr>
+    </thead>
+    <tbody id="job-body"></tbody>
+  </table>
+
+  <div class="pagination-container" id="pagination-container">
+    <div class="status" id="page-info">Showing 0 jobs</div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>Job Details</h2>
+    <span class="close-sidebar" onclick="closeSidebar()">×</span>
+  </div>
+  <div id="sidebar-content">
+    <p style="color:#6b7280;">Select a job to view details</p>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<script>
+let currentOrg = "whatnot";
+let allJobs = [];
+let filteredJobs = [];
+let sortCol = "posted";
+let sortDir = -1; // -1 = newest first
+let currentPage = 1;
+const PAGE_SIZE = 10;
+
+const API_URL = org => `https://api.ashbyhq.com/posting-api/job-board/${org}?includeCompensation=true`;
+
+// ────────────────────────────────────────────────
+async function fetchJobs() {
+  document.getElementById("status").textContent = `Fetching ${currentOrg} jobs...`;
+  try {
+    const res = await fetch(API_URL(currentOrg));
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return data.jobs || [];
+  } catch (err) {
+    alert(`Failed to load jobs for ${currentOrg}:\n${err.message}`);
+    return [];
+  }
+}
+
+// ────────────────────────────────────────────────
+function estimatePostedDate(id) {
+  // Same deterministic pseudo-random method as in Python
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  }
+  const daysAgo = Math.abs(hash) % 90;
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return d.toISOString().slice(0,10);
+}
+
+// ────────────────────────────────────────────────
+async function loadJobs() {
+  const raw = await fetchJobs();
+  allJobs = raw.map(j => ({
+    id: j.id,
+    title: j.title,
+    team: j.team?.name || "—",
+    location: j.location || "—",
+    workplace: j.workplaceType || "—",
+    employment: j.employmentType || "—",
+    compensation: j.compensationTierSummary || "—",
+    posted: estimatePostedDate(j.id),
+    description: j.descriptionPlain || "",
+    jobUrl: `https://jobs.ashbyhq.com/${currentOrg}/${j.id}`
+  }));
+
+  // Populate filters
+  document.getElementById("team").innerHTML = `<option value="">All</option>` +
+    [...new Set(allJobs.map(j => j.team))].sort().map(t => `<option>${t}</option>`).join("");
+
+  document.getElementById("location").innerHTML = `<option value="">All</option>` +
+    [...new Set(allJobs.map(j => j.location))].sort().map(l => `<option>${l}</option>`).join("");
+
+  document.getElementById("workplace").innerHTML = `<option value="">All</option>` +
+    [...new Set(allJobs.map(j => j.workplace))].filter(Boolean).sort().map(w => `<option>${w}</option>`).join("");
+
+  document.getElementById("employment").innerHTML = `<option value="">All</option>` +
+    [...new Set(allJobs.map(j => j.employment))].filter(Boolean).sort().map(e => `<option>${e}</option>`).join("");
+
+  filteredJobs = [...allJobs];
+  applyFilters();
+  document.getElementById("title").textContent = `Job Board — ${currentOrg.charAt(0).toUpperCase() + currentOrg.slice(1)}`;
+  document.getElementById("status").textContent = `Loaded ${allJobs.length} jobs`;
+}
+
+// ────────────────────────────────────────────────
+function applyFilters() {
+  let jobs = [...allJobs];
+
+  const f = id => document.getElementById(id).value;
+  if (f("team"))     jobs = jobs.filter(j => j.team     === f("team"));
+  if (f("location"))  jobs = jobs.filter(j => j.location  === f("location"));
+  if (f("workplace")) jobs = jobs.filter(j => j.workplace === f("workplace"));
+  if (f("employment"))jobs = jobs.filter(j => j.employment=== f("employment"));
+
+  const dateF = f("date");
+  if (dateF !== "all") {
+    const now = Date.now();
+    const limits = { "24h": 86400000, "3d": 259200000, "7d": 604800000, "30d": 2592000000 };
+    jobs = jobs.filter(j => {
+      const d = new Date(j.posted);
+      return (now - d.getTime()) <= limits[dateF];
+    });
+  }
+
+  const q = f("search").trim().toLowerCase();
+  if (q) {
+    jobs = jobs.filter(j =>
+      j.title.toLowerCase().includes(q) ||
+      j.team.toLowerCase().includes(q)
+    );
+  }
+
+  // Sort
+  jobs.sort((a,b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (sortCol === "posted") {
+      va = new Date(va);
+      vb = new Date(vb);
+      return sortDir * (va - vb);
+    }
+    va = String(va || "").toLowerCase();
+    vb = String(vb || "").toLowerCase();
+    return (va < vb ? -1 : va > vb ? 1 : 0) * sortDir;
+  });
+
+  filteredJobs = jobs;
+  currentPage = 1;
+  renderPage(1);
+  updateSortIndicators();
+}
+
+// ────────────────────────────────────────────────
+function renderPage(page) {
+  currentPage = page;
+  const tbody = document.getElementById("job-body");
+  tbody.innerHTML = "";
+
+  const start = (page - 1) * PAGE_SIZE;
+  const pageItems = filteredJobs.slice(start, start + PAGE_SIZE);
+
+  pageItems.forEach(job => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${job.title}</td>
+      <td>${job.team}</td>
+      <td>${job.location}</td>
+      <td>${job.workplace}</td>
+      <td>${job.employment}</td>
+      <td>${job.compensation}</td>
+      <td>${job.posted}</td>
+    `;
+    tr.onclick = () => openSidebar(job);
+    tbody.appendChild(tr);
+  });
+
+  const total = filteredJobs.length;
+  const from = total ? start + 1 : 0;
+  const to = Math.min(start + PAGE_SIZE, total);
+  document.getElementById("page-info").textContent = `Showing ${from}–${to} of ${total}`;
+
+  renderPagination(total);
+}
+
+function renderPagination(total) {
+  const cont = document.getElementById("pagination");
+  cont.innerHTML = "";
+  const pages = Math.ceil(total / PAGE_SIZE);
+  if (pages <= 1) return;
+
+  const addBtn = (text, disabled, fn) => {
+    const b = document.createElement("button");
+    b.className = "page-btn";
+    b.textContent = text;
+    b.disabled = disabled;
+    b.onclick = fn;
+    cont.appendChild(b);
+  };
+
+  addBtn("← Prev", currentPage === 1, () => currentPage > 1 && renderPage(currentPage - 1));
+
+  for (let i = 1; i <= pages; i++) {
+    if (i === 1 || i === pages || Math.abs(i - currentPage) <= 2) {
+      const b = document.createElement("button");
+      b.className = "page-btn" + (i === currentPage ? " active" : "");
+      b.textContent = i;
+      b.onclick = () => renderPage(i);
+      cont.appendChild(b);
+    } else if (cont.lastChild?.textContent !== "...") {
+      const s = document.createElement("span");
+      s.style.padding = "0 8px";
+      s.textContent = "...";
+      cont.appendChild(s);
+    }
+  }
+
+  addBtn("Next →", currentPage === pages, () => currentPage < pages && renderPage(currentPage + 1));
+}
+
+// ────────────────────────────────────────────────
+function updateSortIndicators() {
+  document.querySelectorAll("th[data-sort]").forEach(th => {
+    th.classList.remove("sorted-asc", "sorted-desc");
+    if (th.dataset.sort === sortCol) {
+      th.classList.add(sortDir > 0 ? "sorted-asc" : "sorted-desc");
+    }
+  });
+}
+
+document.querySelectorAll("th[data-sort]").forEach(th => {
+  th.onclick = () => {
+    const col = th.dataset.sort;
+    if (sortCol === col) sortDir *= -1;
+    else {
+      sortCol = col;
+      sortDir = col === "posted" ? -1 : 1;
+    }
+    applyFilters();
+  };
+});
+
+["team","location","workplace","employment","date","search"].forEach(id => {
+  const el = document.getElementById(id);
+  if (el.tagName === "INPUT") el.oninput = applyFilters;
+  else el.onchange = applyFilters;
+});
+
+// ────────────────────────────────────────────────
+function openSidebar(job) {
+  document.getElementById("sidebar-content").innerHTML = `
+    <strong style="font-size:1.3rem;">${job.title}</strong><br><br>
+    <div style="color:#4b5563; line-height:1.7;">
+      <div><strong>Team:</strong> ${job.team}</div>
+      <div><strong>Location:</strong> ${job.location}</div>
+      <div><strong>Workplace:</strong> ${job.workplace}</div>
+      <div><strong>Employment:</strong> ${job.employment}</div>
+      <div><strong>Compensation:</strong> ${job.compensation}</div>
+      <div><strong>Posted:</strong> ${job.posted}</div>
+    </div>
+    <a href="${job.jobUrl}" target="_blank" class="btn" style="margin-top:16px; display:inline-block;">
+      View & Apply on Ashby →
+    </a>
+    <div style="margin-top:20px; font-size:0.9rem; color:#6b7280;">
+      <strong>Description excerpt:</strong><br>${job.description.slice(0,400)}${job.description.length > 400 ? "..." : ""}
+    </div>
+  `;
+  document.getElementById("sidebar").classList.add("open");
+  document.getElementById("overlay").classList.add("show");
+}
+
+function closeSidebar() {
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("overlay").classList.remove("show");
+}
+
+function changeOrg() {
+  const org = prompt("Enter Ashby organization name (e.g. whatnot, linear, ramp):", currentOrg);
+  if (org && org.trim()) {
+    currentOrg = org.trim().toLowerCase();
+    loadJobs();
+  }
+}
+
+function clearFilters() {
+  ["team","location","workplace","employment","date","search"].forEach(id => {
+    document.getElementById(id).value = id === "date" ? "all" : "";
+  });
+  applyFilters();
+}
+
+// Initial load
+loadJobs();
+</script>
+</body>
+</html>
