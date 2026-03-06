@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Greenhouse Job Board</title>
+  <style>
+    :root {
+      --primary: #1e40af;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-600: #4b5563;
+      --gray-800: #1f2937;
+    }
+
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-800);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .filters {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .filter-row label {
+      font-weight: 500;
+      color: var(--gray-600);
+    }
+
+    .multi-select {
+      position: relative;
+    }
+
+    .multi-select-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .multi-select-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15);
+      max-height: 320px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+      margin-top: 4px;
+    }
+
+    .multi-select-menu.show { display: block; }
+
+    .multi-select-item {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .multi-select-item:hover {
+      background: var(--gray-100);
+    }
+
+    .multi-select-clear {
+      color: var(--primary);
+      font-size: 0.9rem;
+      padding: 8px 12px;
+      border-top: 1px solid var(--gray-200);
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    th {
+      background: var(--gray-200);
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    th:hover { background: #d1d5db; }
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    .job-details {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      min-height: 140px;
+    }
+
+    .status {
+      color: var(--gray-600);
+      font-size: 0.95rem;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn:hover { background: #1e3a8a; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--gray-300);
+      color: var(--gray-800);
+    }
+
+    .btn-outline:hover {
+      background: var(--gray-100);
+    }
+
+    input, select {
+      padding: 8px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .filter-row { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1 id="title">Job Board — SPACEX</h1>
+    <div>
+      <button class="btn" onclick="changeCompany()">Change Company</button>
+      <span class="status" id="status">Ready</span>
+    </div>
+  </header>
+
+  <div class="filters">
+    <div class="filter-row">
+      <label>Department</label>
+      <select id="department">
+        <option value="">All</option>
+      </select>
+    </div>
+
+    <div class="filter-row">
+      <label>Locations</label>
+      <div class="multi-select">
+        <div class="multi-select-input" id="location-display">All</div>
+        <div class="multi-select-menu" id="location-menu"></div>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <label>Date Posted</label>
+      <select id="date-filter">
+        <option value="all">All</option>
+        <option value="24h">Last 24 hours</option>
+        <option value="3d">Last 3 days</option>
+        <option value="7d">Last week</option>
+        <option value="30d">Last month</option>
+      </select>
+    </div>
+
+    <div class="filter-row">
+      <label>Search</label>
+      <input type="text" id="search" placeholder="Job title, department...">
+    </div>
+
+    <div style="margin-top:16px; display:flex; gap:12px;">
+      <button class="btn" onclick="loadJobs()">Refresh</button>
+      <button class="btn btn-outline" onclick="clearFilters()">Clear Filters</button>
+    </div>
+  </div>
+
+  <table id="job-table">
+    <thead>
+      <tr>
+        <th data-sort="title">Job Title</th>
+        <th data-sort="dept">Department</th>
+        <th data-sort="location">Location</th>
+        <th data-sort="date">Date Posted</th>
+      </tr>
+    </thead>
+    <tbody id="job-body"></tbody>
+  </table>
+
+  <div class="job-details" id="details">
+    <p style="color:#6b7280;">Select a job to view details</p>
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────
+let currentCompany = "spacex";
+let allJobs = [];
+let filteredJobs = [];
+let sortCol = "date";
+let sortDir = -1; // -1 = newest first
+let selectedLocations = new Set();
+
+const API_BASE = "https://boards-api.greenhouse.io/v1/boards/";
+
+// ────────────────────────────────────────────────
+async function fetchJobs() {
+  const status = document.getElementById("status");
+  status.textContent = `Fetching ${currentCompany} jobs...`;
+
+  try {
+    const res = await fetch(`${API_BASE}${currentCompany}/jobs?content=true`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return data.jobs || [];
+  } catch (err) {
+    alert("Failed to load jobs:\n" + err.message);
+    return [];
+  }
+}
+
+// ────────────────────────────────────────────────
+function formatDate(iso) {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    return d.toISOString().slice(0,16).replace("T"," ");
+  } catch {
+    return "—";
+  }
+}
+
+// ────────────────────────────────────────────────
+function renderJobs() {
+  const tbody = document.getElementById("job-body");
+  tbody.innerHTML = "";
+
+  filteredJobs.forEach(job => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${job.title || "—"}</td>
+      <td>${job.dept || "—"}</td>
+      <td>${job.location?.name || "—"}</td>
+      <td>${job.displayDate || "—"}</td>
+    `;
+    tr.addEventListener("click", () => showDetails(job));
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("status").textContent =
+    `Showing ${filteredJobs.length} of ${allJobs.length} jobs` +
+    (selectedLocations.size ? ` (${selectedLocations.size} locations)` : "");
+}
+
+// ────────────────────────────────────────────────
+function applyFilters() {
+  let jobs = [...allJobs];
+
+  // Department
+  const dept = document.getElementById("department").value;
+  if (dept) {
+    jobs = jobs.filter(j => j.dept === dept);
+  }
+
+  // Locations
+  if (selectedLocations.size > 0) {
+    jobs = jobs.filter(j => selectedLocations.has(j.location?.name));
+  }
+
+  // Date
+  const dateFilter = document.getElementById("date-filter").value;
+  if (dateFilter !== "all") {
+    const now = Date.now();
+    const limits = { "24h": 86400000, "3d": 3*86400000, "7d": 7*86400000, "30d": 30*86400000 };
+    const ms = limits[dateFilter];
+    if (ms) {
+      jobs = jobs.filter(j => {
+        if (!j.updated_at) return false;
+        return (now - new Date(j.updated_at).getTime()) <= ms;
+      });
+    }
+  }
+
+  // Search
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  if (q) {
+    jobs = jobs.filter(j =>
+      j.title?.toLowerCase().includes(q) ||
+      j.dept?.toLowerCase().includes(q)
+    );
+  }
+
+  // Sort
+  jobs.sort((a,b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (sortCol === "date") {
+      va = a.updated_at ? new Date(a.updated_at) : new Date(0);
+      vb = b.updated_at ? new Date(b.updated_at) : new Date(0);
+    } else {
+      va = (va || "").toString().toLowerCase();
+      vb = (vb || "").toString().toLowerCase();
+    }
+    if (va < vb) return -sortDir;
+    if (va > vb) return sortDir;
+    return 0;
+  });
+
+  filteredJobs = jobs;
+  renderJobs();
+}
+
+// ────────────────────────────────────────────────
+function showDetails(job) {
+  const el = document.getElementById("details");
+  const loc = job.location?.name || "—";
+
+  el.innerHTML = `
+    <strong>${job.title || "—"}</strong><br><br>
+    <div style="color:#4b5563; margin:8px 0;">
+      Department: ${job.dept || "Not specified"}<br>
+      Location: ${loc}<br>
+      Updated: ${job.updated_at ? new Date(job.updated_at).toLocaleString() : "—"}<br>
+      Job ID: ${job.id || "—"}
+    </div>
+    <a href="${job.absolute_url || '#'}" target="_blank" class="btn">
+      View Job on Greenhouse →
+    </a>
+  `;
+}
+
+// ────────────────────────────────────────────────
+async function loadJobs() {
+  const jobs = await fetchJobs();
+  allJobs = jobs.map(j => ({
+    id:          j.id,
+    title:       j.title,
+    dept:        j.departments?.[0]?.name || "Not specified",
+    location:    j.location,
+    updated_at:  j.updated_at,
+    absolute_url:j.absolute_url,
+    displayDate: formatDate(j.updated_at)
+  }));
+
+  // Departments
+  const depts = [...new Set(allJobs.map(j => j.dept))].sort();
+  const select = document.getElementById("department");
+  select.innerHTML = `<option value="">All</option>` +
+    depts.map(d => `<option value="${d}">${d}</option>`).join("");
+
+  // Locations multi-select
+  const locs = [...new Set(allJobs.map(j => j.location?.name).filter(Boolean))].sort();
+  renderLocationMenu(locs);
+
+  filteredJobs = [...allJobs];
+  applyFilters();
+  document.getElementById("status").textContent = `Loaded ${allJobs.length} jobs`;
+}
+
+// ────────────────────────────────────────────────
+function renderLocationMenu(locations) {
+  const menu = document.getElementById("location-menu");
+  menu.innerHTML = "";
+
+  locations.forEach(loc => {
+    const div = document.createElement("div");
+    div.className = "multi-select-item";
+    div.innerHTML = `
+      <input type="checkbox" ${selectedLocations.has(loc) ? "checked" : ""}>
+      ${loc}
+    `;
+    div.querySelector("input").addEventListener("change", e => {
+      if (e.target.checked) {
+        selectedLocations.add(loc);
+      } else {
+        selectedLocations.delete(loc);
+      }
+      updateLocationDisplay();
+      applyFilters();
+    });
+    menu.appendChild(div);
+  });
+
+  const clear = document.createElement("div");
+  clear.className = "multi-select-clear";
+  clear.textContent = "Clear All";
+  clear.onclick = () => {
+    selectedLocations.clear();
+    menu.querySelectorAll("input").forEach(cb => cb.checked = false);
+    updateLocationDisplay();
+    applyFilters();
+  };
+  menu.appendChild(clear);
+}
+
+function updateLocationDisplay() {
+  const display = document.getElementById("location-display");
+  if (selectedLocations.size === 0) {
+    display.textContent = "All";
+  } else {
+    const arr = [...selectedLocations].sort();
+    let txt = arr.slice(0,3).join(", ");
+    if (arr.length > 3) txt += ` (+${arr.length-3})`;
+    display.textContent = txt;
+  }
+}
+
+// ────────────────────────────────────────────────
+function toggleLocationMenu() {
+  const menu = document.getElementById("location-menu");
+  menu.classList.toggle("show");
+
+  // Close when clicking outside
+  const listener = e => {
+    if (!document.getElementById("location-display").contains(e.target) &&
+        !menu.contains(e.target)) {
+      menu.classList.remove("show");
+      document.removeEventListener("click", listener);
+    }
+  };
+  document.addEventListener("click", listener);
+}
+
+// ────────────────────────────────────────────────
+function changeCompany() {
+  const name = prompt("Enter Greenhouse board name (e.g. stripe, notion, openai):", currentCompany);
+  if (name && name.trim()) {
+    currentCompany = name.trim().toLowerCase();
+    document.getElementById("title").textContent = `Job Board — ${currentCompany.toUpperCase()}`;
+    loadJobs();
+  }
+}
+
+// ────────────────────────────────────────────────
+function clearFilters() {
+  document.getElementById("department").value = "";
+  selectedLocations.clear();
+  updateLocationDisplay();
+  document.getElementById("date-filter").value = "all";
+  document.getElementById("search").value = "";
+  applyFilters();
+}
+
+// ────────────────────────────────────────────────
+// Event listeners
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("location-display").onclick = toggleLocationMenu;
+
+  document.querySelectorAll("th[data-sort]").forEach(th => {
+    th.addEventListener("click", () => {
+      const col = th.dataset.sort;
+      if (sortCol === col) {
+        sortDir *= -1;
+      } else {
+        sortCol = col;
+        sortDir = (col === "date") ? -1 : 1;
+      }
+      applyFilters();
+    });
+  });
+
+  document.querySelectorAll("#department, #date-filter, #search")
+    .forEach(el => el.addEventListener("input", applyFilters));
+  document.getElementById("search").addEventListener("input", applyFilters);
+
+  // Initial load
+  loadJobs();
+});
+</script>
+</body>
+</html>
