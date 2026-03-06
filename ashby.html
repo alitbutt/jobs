@@ -196,7 +196,7 @@
 
 <div class="container">
   <header>
-    <h1 id="title">Job Board — Whatnot</h1>
+    <h1 id="title">Job Board — snowflake</h1>
     <div>
       <button class="btn" onclick="changeOrg()">Change Org</button>
       <span class="status" id="status">Ready</span>
@@ -274,7 +274,7 @@
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
 <script>
-let currentOrg = "whatnot";
+let currentOrg = "snowflake";
 let allJobs = [];
 let filteredJobs = [];
 let sortCol = "posted";
@@ -517,7 +517,7 @@ function closeSidebar() {
 }
 
 function changeOrg() {
-  const org = prompt("Enter Ashby organization name (e.g. whatnot, linear, ramp):", currentOrg);
+  const org = prompt("Enter Ashby organization name (e.g. snowflake, whatnot, linear, ramp):", currentOrg);
   if (org && org.trim()) {
     currentOrg = org.trim().toLowerCase();
     loadJobs();
