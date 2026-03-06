@@ -12,6 +12,7 @@
       --gray-300: #d1d5db;
       --gray-600: #4b5563;
       --gray-800: #1f2937;
+      --sidebar-width: 380px;
     }
 
     * { box-sizing: border-box; margin:0; padding:0; }
@@ -37,10 +38,7 @@
       gap: 16px;
     }
 
-    h1 {
-      font-size: 1.8rem;
-      font-weight: 700;
-    }
+    h1 { font-size: 1.8rem; font-weight: 700; }
 
     .filters {
       background: white;
@@ -58,14 +56,9 @@
       margin-bottom: 12px;
     }
 
-    .filter-row label {
-      font-weight: 500;
-      color: var(--gray-600);
-    }
+    .filter-row label { font-weight: 500; color: var(--gray-600); }
 
-    .multi-select {
-      position: relative;
-    }
+    .multi-select { position: relative; }
 
     .multi-select-input {
       width: 100%;
@@ -81,7 +74,8 @@
       position: absolute;
       top: 100%;
       left: 0;
-      right: 0;
+      min-width: 240px;
+      max-width: 380px;
       background: white;
       border: 1px solid var(--gray-300);
       border-radius: 6px;
@@ -91,20 +85,35 @@
       z-index: 100;
       display: none;
       margin-top: 4px;
+      padding: 6px 0;
     }
 
     .multi-select-menu.show { display: block; }
 
     .multi-select-item {
-      padding: 8px 12px;
       display: flex;
       align-items: center;
       gap: 8px;
+      padding: 6px 12px;
       cursor: pointer;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .multi-select-item:hover {
-      background: var(--gray-100);
+    .multi-select-item:hover { background: var(--gray-100); }
+
+    .multi-select-item input[type="checkbox"] {
+      width: 14px; height: 14px; margin: 0; flex-shrink: 0;
+    }
+
+    .multi-select-item label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
     }
 
     .multi-select-clear {
@@ -113,7 +122,10 @@
       padding: 8px 12px;
       border-top: 1px solid var(--gray-200);
       cursor: pointer;
+      text-align: center;
     }
+
+    .multi-select-clear:hover { background: var(--gray-100); }
 
     table {
       width: 100%;
@@ -135,27 +147,120 @@
       font-weight: 600;
       cursor: pointer;
       user-select: none;
+      position: relative;
     }
 
     th:hover { background: #d1d5db; }
 
-    tr:hover {
-      background: #f8fafc;
-    }
-
-    .job-details {
-      background: white;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      min-height: 140px;
-    }
-
-    .status {
+    th::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9em;
       color: var(--gray-600);
-      font-size: 0.95rem;
+      opacity: 0.4;
     }
+
+    th.sorted-asc::after { content: '↑'; opacity: 1; color: var(--primary); }
+    th.sorted-desc::after { content: '↓'; opacity: 1; color: var(--primary); }
+
+    tr:hover { background: #f8fafc; cursor: pointer; }
+
+    /* Pagination */
+    .pagination-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .pagination {
+      display: flex;
+      gap: 4px;
+    }
+
+    .page-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      min-width: 36px;
+      text-align: center;
+    }
+
+    .page-btn:hover { background: var(--gray-100); }
+    .page-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .page-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ── Sidebar — strictly right side only ── */
+    .sidebar {
+      position: fixed !important;
+      inset: 0 auto 0 auto !important;     /* top right bottom left */
+      right: -var(--sidebar-width) !important;
+      left: auto !important;
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: white;
+      box-shadow: -8px 0 30px rgba(0,0,0,0.2);
+      transition: right 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 24px;
+      pointer-events: none;
+	  display: none;
+    }
+
+    .sidebar.open {
+      right: 0 !important;
+      pointer-events: auto;
+	  display: block;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .close-sidebar {
+      font-size: 2rem;
+      cursor: pointer;
+      color: var(--gray-600);
+      line-height: 1;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 900;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.32s ease;
+    }
+
+    .overlay.show {
+      display: block;
+      opacity: 1;
+    }
+
+    .status { color: var(--gray-600); font-size: 0.95rem; }
 
     .btn {
       padding: 8px 16px;
@@ -175,9 +280,7 @@
       color: var(--gray-800);
     }
 
-    .btn-outline:hover {
-      background: var(--gray-100);
-    }
+    .btn-outline:hover { background: var(--gray-100); }
 
     input, select {
       padding: 8px 12px;
@@ -189,6 +292,8 @@
     @media (max-width: 900px) {
       .filter-row { grid-template-columns: 1fr; }
       header { flex-direction: column; align-items: flex-start; }
+      .sidebar { width: 85vw; right: -85vw; }
+      :root { --sidebar-width: 85vw; }
     }
   </style>
 </head>
@@ -206,9 +311,7 @@
   <div class="filters">
     <div class="filter-row">
       <label>Department</label>
-      <select id="department">
-        <option value="">All</option>
-      </select>
+      <select id="department"><option value="">All</option></select>
     </div>
 
     <div class="filter-row">
@@ -253,10 +356,24 @@
     <tbody id="job-body"></tbody>
   </table>
 
-  <div class="job-details" id="details">
+  <div class="pagination-container" id="pagination-container">
+    <div class="status" id="page-info">Showing 0 jobs</div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<!-- Only one sidebar – right side -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>Job Details</h2>
+    <span class="close-sidebar" onclick="closeSidebar()">×</span>
+  </div>
+  <div id="sidebar-content">
     <p style="color:#6b7280;">Select a job to view details</p>
   </div>
 </div>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
 <script>
 // ────────────────────────────────────────────────
@@ -264,16 +381,16 @@ let currentCompany = "spacex";
 let allJobs = [];
 let filteredJobs = [];
 let sortCol = "date";
-let sortDir = -1; // -1 = newest first
+let sortDir = -1;
 let selectedLocations = new Set();
+const PAGE_SIZE = 10;
+let currentPage = 1;
 
 const API_BASE = "https://boards-api.greenhouse.io/v1/boards/";
 
 // ────────────────────────────────────────────────
 async function fetchJobs() {
-  const status = document.getElementById("status");
-  status.textContent = `Fetching ${currentCompany} jobs...`;
-
+  document.getElementById("status").textContent = `Fetching ${currentCompany} jobs...`;
   try {
     const res = await fetch(`${API_BASE}${currentCompany}/jobs?content=true`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -285,138 +402,186 @@ async function fetchJobs() {
   }
 }
 
-// ────────────────────────────────────────────────
 function formatDate(iso) {
   if (!iso) return "—";
   try {
-    const d = new Date(iso);
-    return d.toISOString().slice(0,16).replace("T"," ");
+    return new Date(iso).toISOString().slice(0,16).replace("T", " ");
   } catch {
     return "—";
   }
 }
 
 // ────────────────────────────────────────────────
-function renderJobs() {
+function renderJobs(page = 1) {
+  currentPage = page;
   const tbody = document.getElementById("job-body");
   tbody.innerHTML = "";
 
-  filteredJobs.forEach(job => {
+  const start = (page - 1) * PAGE_SIZE;
+  const pageJobs = filteredJobs.slice(start, start + PAGE_SIZE);
+
+  pageJobs.forEach(job => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${job.title || "—"}</td>
       <td>${job.dept || "—"}</td>
-      <td>${job.location?.name || "—"}</td>
+      <td>${job.locationName || "—"}</td>
       <td>${job.displayDate || "—"}</td>
     `;
-    tr.addEventListener("click", () => showDetails(job));
+    tr.addEventListener("click", () => openSidebar(job));
     tbody.appendChild(tr);
   });
 
-  document.getElementById("status").textContent =
-    `Showing ${filteredJobs.length} of ${allJobs.length} jobs` +
-    (selectedLocations.size ? ` (${selectedLocations.size} locations)` : "");
+  const total = filteredJobs.length;
+  const showingStart = total > 0 ? start + 1 : 0;
+  const showingEnd = Math.min(start + PAGE_SIZE, total);
+
+  document.getElementById("page-info").textContent =
+    `Showing ${showingStart}–${showingEnd} of ${total} jobs` +
+    (selectedLocations.size ? ` (${selectedLocations.size} loc)` : "");
+
+  renderPagination(total);
 }
 
-// ────────────────────────────────────────────────
-function applyFilters() {
-  let jobs = [...allJobs];
+function renderPagination(total) {
+  const container = document.getElementById("pagination");
+  container.innerHTML = "";
 
-  // Department
-  const dept = document.getElementById("department").value;
-  if (dept) {
-    jobs = jobs.filter(j => j.dept === dept);
-  }
+  const pageCount = Math.ceil(total / PAGE_SIZE);
+  if (pageCount <= 1) return;
 
-  // Locations
-  if (selectedLocations.size > 0) {
-    jobs = jobs.filter(j => selectedLocations.has(j.location?.name));
-  }
+  const prev = document.createElement("button");
+  prev.className = "page-btn";
+  prev.textContent = "← Prev";
+  prev.disabled = currentPage === 1;
+  prev.onclick = () => currentPage > 1 && renderJobs(currentPage - 1);
+  container.appendChild(prev);
 
-  // Date
-  const dateFilter = document.getElementById("date-filter").value;
-  if (dateFilter !== "all") {
-    const now = Date.now();
-    const limits = { "24h": 86400000, "3d": 3*86400000, "7d": 7*86400000, "30d": 30*86400000 };
-    const ms = limits[dateFilter];
-    if (ms) {
-      jobs = jobs.filter(j => {
-        if (!j.updated_at) return false;
-        return (now - new Date(j.updated_at).getTime()) <= ms;
-      });
+  for (let i = 1; i <= pageCount; i++) {
+    if (i === 1 || i === pageCount || Math.abs(i - currentPage) <= 2) {
+      const btn = document.createElement("button");
+      btn.className = "page-btn" + (i === currentPage ? " active" : "");
+      btn.textContent = i;
+      btn.onclick = () => renderJobs(i);
+      container.appendChild(btn);
+    } else if (container.lastChild?.textContent !== "...") {
+      const dots = document.createElement("span");
+      dots.style.padding = "0 8px";
+      dots.textContent = "...";
+      container.appendChild(dots);
     }
   }
 
-  // Search
+  const next = document.createElement("button");
+  next.className = "page-btn";
+  next.textContent = "Next →";
+  next.disabled = currentPage === pageCount;
+  next.onclick = () => currentPage < pageCount && renderJobs(currentPage + 1);
+  container.appendChild(next);
+}
+
+// ────────────────────────────────────────────────
+function updateSortIndicators() {
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.classList.remove('sorted-asc', 'sorted-desc');
+    if (th.dataset.sort === sortCol) {
+      th.classList.add(sortDir > 0 ? 'sorted-asc' : 'sorted-desc');
+    }
+  });
+}
+
+function applyFilters() {
+  let jobs = [...allJobs];
+
+  const dept = document.getElementById("department").value;
+  if (dept) jobs = jobs.filter(j => j.dept === dept);
+
+  if (selectedLocations.size) {
+    jobs = jobs.filter(j => selectedLocations.has(j.locationName));
+  }
+
+  const dateFilter = document.getElementById("date-filter").value;
+  if (dateFilter !== "all") {
+    const now = Date.now();
+    const limits = { "24h": 864e5, "3d": 2592e5, "7d": 6048e5, "30d": 2592e6 };
+    const ms = limits[dateFilter];
+    if (ms) jobs = jobs.filter(j => j.updated_at && now - +new Date(j.updated_at) <= ms);
+  }
+
   const q = document.getElementById("search").value.trim().toLowerCase();
   if (q) {
     jobs = jobs.filter(j =>
-      j.title?.toLowerCase().includes(q) ||
-      j.dept?.toLowerCase().includes(q)
+      (j.title || "").toLowerCase().includes(q) ||
+      (j.dept  || "").toLowerCase().includes(q)
     );
   }
 
-  // Sort
-  jobs.sort((a,b) => {
+  jobs.sort((a, b) => {
     let va = a[sortCol], vb = b[sortCol];
     if (sortCol === "date") {
       va = a.updated_at ? new Date(a.updated_at) : new Date(0);
       vb = b.updated_at ? new Date(b.updated_at) : new Date(0);
-    } else {
-      va = (va || "").toString().toLowerCase();
-      vb = (vb || "").toString().toLowerCase();
+      return sortDir * (va - vb);
     }
-    if (va < vb) return -sortDir;
-    if (va > vb) return sortDir;
-    return 0;
+    va = String(va || "").toLowerCase();
+    vb = String(vb || "").toLowerCase();
+    return (va < vb ? -1 : va > vb ? 1 : 0) * sortDir;
   });
 
   filteredJobs = jobs;
+  currentPage = 1;
   renderJobs();
+  updateSortIndicators();
 }
 
 // ────────────────────────────────────────────────
-function showDetails(job) {
-  const el = document.getElementById("details");
-  const loc = job.location?.name || "—";
+function openSidebar(job) {
+  const content = document.getElementById("sidebar-content");
+  const loc = job.locationName || "—";
 
-  el.innerHTML = `
-    <strong>${job.title || "—"}</strong><br><br>
-    <div style="color:#4b5563; margin:8px 0;">
-      Department: ${job.dept || "Not specified"}<br>
-      Location: ${loc}<br>
-      Updated: ${job.updated_at ? new Date(job.updated_at).toLocaleString() : "—"}<br>
-      Job ID: ${job.id || "—"}
+  content.innerHTML = `
+    <strong style="font-size:1.3rem;">${job.title || "—"}</strong><br><br>
+    <div style="color:#4b5563; line-height:1.7; margin:16px 0;">
+      <div><strong>Department:</strong> ${job.dept || "Not specified"}</div>
+      <div><strong>Location:</strong> ${loc}</div>
+      <div><strong>Updated:</strong> ${job.updated_at ? new Date(job.updated_at).toLocaleString() : "—"}</div>
+      <div><strong>Job ID:</strong> ${job.id || "—"}</div>
     </div>
-    <a href="${job.absolute_url || '#'}" target="_blank" class="btn">
+    <a href="${job.absolute_url || '#'}" target="_blank" class="btn" style="margin-top:12px; display:inline-block;">
       View Job on Greenhouse →
     </a>
   `;
+
+  document.getElementById("sidebar").classList.add("open");
+  document.getElementById("overlay").classList.add("show");
+}
+
+function closeSidebar() {
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("overlay").classList.remove("show");
 }
 
 // ────────────────────────────────────────────────
 async function loadJobs() {
-  const jobs = await fetchJobs();
-  allJobs = jobs.map(j => ({
+  const jobsRaw = await fetchJobs();
+  allJobs = jobsRaw.map(j => ({
     id:          j.id,
     title:       j.title,
     dept:        j.departments?.[0]?.name || "Not specified",
-    location:    j.location,
+    locationName:j.location?.name || null,
     updated_at:  j.updated_at,
     absolute_url:j.absolute_url,
     displayDate: formatDate(j.updated_at)
   }));
 
-  // Departments
   const depts = [...new Set(allJobs.map(j => j.dept))].sort();
-  const select = document.getElementById("department");
-  select.innerHTML = `<option value="">All</option>` +
-    depts.map(d => `<option value="${d}">${d}</option>`).join("");
+  document.getElementById("department").innerHTML =
+    `<option value="">All</option>` + depts.map(d => `<option value="${d}">${d}</option>`).join("");
 
-  // Locations multi-select
-  const locs = [...new Set(allJobs.map(j => j.location?.name).filter(Boolean))].sort();
+  const locs = [...new Set(allJobs.map(j => j.locationName).filter(Boolean))].sort();
   renderLocationMenu(locs);
 
+  updateSortIndicators();
   filteredJobs = [...allJobs];
   applyFilters();
   document.getElementById("status").textContent = `Loaded ${allJobs.length} jobs`;
@@ -428,22 +593,34 @@ function renderLocationMenu(locations) {
   menu.innerHTML = "";
 
   locations.forEach(loc => {
-    const div = document.createElement("div");
-    div.className = "multi-select-item";
-    div.innerHTML = `
-      <input type="checkbox" ${selectedLocations.has(loc) ? "checked" : ""}>
-      ${loc}
-    `;
-    div.querySelector("input").addEventListener("change", e => {
-      if (e.target.checked) {
-        selectedLocations.add(loc);
-      } else {
-        selectedLocations.delete(loc);
+    const item = document.createElement("div");
+    item.className = "multi-select-item";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = selectedLocations.has(loc);
+    cb.id = `loc-${loc.replace(/[^a-z0-9]+/gi, '-')}`;
+
+    const lbl = document.createElement("label");
+    lbl.htmlFor = cb.id;
+    lbl.textContent = loc;
+
+    item.append(cb, lbl);
+
+    item.addEventListener("click", e => {
+      if (e.target !== cb) {
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event("change"));
       }
+    });
+
+    cb.addEventListener("change", () => {
+      cb.checked ? selectedLocations.add(loc) : selectedLocations.delete(loc);
       updateLocationDisplay();
       applyFilters();
     });
-    menu.appendChild(div);
+
+    menu.appendChild(item);
   });
 
   const clear = document.createElement("div");
@@ -451,7 +628,7 @@ function renderLocationMenu(locations) {
   clear.textContent = "Clear All";
   clear.onclick = () => {
     selectedLocations.clear();
-    menu.querySelectorAll("input").forEach(cb => cb.checked = false);
+    menu.querySelectorAll("input").forEach(c => c.checked = false);
     updateLocationDisplay();
     applyFilters();
   };
@@ -459,44 +636,39 @@ function renderLocationMenu(locations) {
 }
 
 function updateLocationDisplay() {
-  const display = document.getElementById("location-display");
+  const el = document.getElementById("location-display");
   if (selectedLocations.size === 0) {
-    display.textContent = "All";
-  } else {
-    const arr = [...selectedLocations].sort();
-    let txt = arr.slice(0,3).join(", ");
-    if (arr.length > 3) txt += ` (+${arr.length-3})`;
-    display.textContent = txt;
+    el.textContent = "All";
+    return;
   }
+  const arr = [...selectedLocations].sort();
+  let txt = arr.slice(0,3).join(", ");
+  if (arr.length > 3) txt += ` (+${arr.length-3})`;
+  el.textContent = txt;
 }
 
-// ────────────────────────────────────────────────
 function toggleLocationMenu() {
   const menu = document.getElementById("location-menu");
   menu.classList.toggle("show");
-
-  // Close when clicking outside
-  const listener = e => {
-    if (!document.getElementById("location-display").contains(e.target) &&
-        !menu.contains(e.target)) {
+  const handler = e => {
+    if (!document.getElementById("location-display").contains(e.target) && !menu.contains(e.target)) {
       menu.classList.remove("show");
-      document.removeEventListener("click", listener);
+      document.removeEventListener("click", handler);
     }
   };
-  document.addEventListener("click", listener);
+  setTimeout(() => document.addEventListener("click", handler), 10);
 }
 
 // ────────────────────────────────────────────────
 function changeCompany() {
-  const name = prompt("Enter Greenhouse board name (e.g. stripe, notion, openai):", currentCompany);
-  if (name && name.trim()) {
+  const name = prompt("Greenhouse board name (e.g. stripe, notion):", currentCompany);
+  if (name?.trim()) {
     currentCompany = name.trim().toLowerCase();
     document.getElementById("title").textContent = `Job Board — ${currentCompany.toUpperCase()}`;
     loadJobs();
   }
 }
 
-// ────────────────────────────────────────────────
 function clearFilters() {
   document.getElementById("department").value = "";
   selectedLocations.clear();
@@ -507,28 +679,26 @@ function clearFilters() {
 }
 
 // ────────────────────────────────────────────────
-// Event listeners
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("location-display").onclick = toggleLocationMenu;
 
   document.querySelectorAll("th[data-sort]").forEach(th => {
     th.addEventListener("click", () => {
       const col = th.dataset.sort;
-      if (sortCol === col) {
-        sortDir *= -1;
-      } else {
+      if (sortCol === col) sortDir *= -1;
+      else {
         sortCol = col;
-        sortDir = (col === "date") ? -1 : 1;
+        sortDir = col === "date" ? -1 : 1;
       }
       applyFilters();
     });
   });
 
-  document.querySelectorAll("#department, #date-filter, #search")
-    .forEach(el => el.addEventListener("input", applyFilters));
+  ["department", "date-filter"].forEach(id =>
+    document.getElementById(id).addEventListener("change", applyFilters)
+  );
   document.getElementById("search").addEventListener("input", applyFilters);
 
-  // Initial load
   loadJobs();
 });
 </script>
