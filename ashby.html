@@ -48,11 +48,91 @@
       display: grid;
       grid-template-columns: 140px 1fr;
       gap: 12px;
-      align-items: center;
-      margin-bottom: 12px;
+      align-items: start;
+      margin-bottom: 16px;
     }
 
-    .filter-row label { font-weight: 500; color: var(--gray-600); }
+    .filter-row label { 
+      font-weight: 500; 
+      color: var(--gray-600); 
+      padding-top: 8px; 
+    }
+
+    .dropdown-wrapper {
+      position: relative;
+      min-width: 260px;
+    }
+
+    .dropdown-field {
+      padding: 8px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .dropdown-field:hover { border-color: var(--gray-400); }
+
+    .dropdown-field .arrow { font-size: 0.9rem; color: var(--gray-600); }
+
+    .dropdown-content {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      min-width: 300px;              /* wider default to prevent crowding */
+      background: white;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      max-height: 340px;
+      overflow-y: auto;
+      z-index: 10;
+      margin-top: 4px;
+      padding: 6px 0;
+      display: none;
+    }
+
+    .dropdown-content.open { display: block; }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;           /* changed to center for better vertical alignment */
+      padding: 8px 16px;
+      cursor: pointer;
+      gap: 10px;                     /* tighter gap between check and text */
+    }
+
+    .checkbox-item:hover { background: var(--gray-100); }
+
+    .checkbox-item input[type="checkbox"] {
+      flex-shrink: 0;
+      accent-color: var(--primary);
+      width: 16px;
+      height: 16px;
+    }
+
+    .checkbox-item label {
+      flex: 1;
+      cursor: pointer;
+      text-align: left;              /* explicit left alignment */
+      word-break: break-word;
+      hyphens: auto;
+      line-height: 1.45;
+      padding-left: 2px;             /* tiny nudge if needed */
+    }
+
+    select, input {
+      padding: 8px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      width: 100%;
+    }
 
     table {
       width: 100%;
@@ -178,17 +258,13 @@
 
     .btn:hover { background: #1e3a8a; }
 
-    input, select {
-      padding: 8px 12px;
-      border: 1px solid var(--gray-300);
-      border-radius: 6px;
-      width: 100%;
-    }
+    .btn-secondary { background: #6b7280; }
 
     @media (max-width: 900px) {
       .filter-row { grid-template-columns: 1fr; }
       .sidebar { width: 85vw; right: -85vw; }
       :root { --sidebar-width: 85vw; }
+      .dropdown-content { min-width: 100%; }
     }
   </style>
 </head>
@@ -209,8 +285,14 @@
       <select id="team"><option value="">All</option></select>
     </div>
     <div class="filter-row">
-      <label>Location</label>
-      <select id="location"><option value="">All</option></select>
+      <label>Locations</label>
+      <div class="dropdown-wrapper">
+        <div class="dropdown-field" id="location-field" onclick="toggleDropdown()">
+          <span id="location-summary">All</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="dropdown-content" id="location-dropdown"></div>
+      </div>
     </div>
     <div class="filter-row">
       <label>Workplace Type</label>
@@ -236,7 +318,7 @@
     </div>
     <div style="margin-top:16px; display:flex; gap:12px;">
       <button class="btn" onclick="loadJobs()">Refresh</button>
-      <button class="btn" style="background:#6b7280;" onclick="clearFilters()">Clear Filters</button>
+      <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
     </div>
   </div>
 
@@ -284,7 +366,6 @@ const PAGE_SIZE = 10;
 
 const API_URL = org => `https://api.ashbyhq.com/posting-api/job-board/${org}?includeCompensation=true`;
 
-// ────────────────────────────────────────────────
 async function fetchJobs() {
   document.getElementById("status").textContent = `Fetching ${currentOrg} jobs...`;
   try {
@@ -298,9 +379,7 @@ async function fetchJobs() {
   }
 }
 
-// ────────────────────────────────────────────────
 function estimatePostedDate(id) {
-  // Same deterministic pseudo-random method as in Python
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) | 0;
@@ -311,7 +390,6 @@ function estimatePostedDate(id) {
   return d.toISOString().slice(0,10);
 }
 
-// ────────────────────────────────────────────────
 async function loadJobs() {
   const raw = await fetchJobs();
   allJobs = raw.map(j => ({
@@ -327,18 +405,33 @@ async function loadJobs() {
     jobUrl: `https://jobs.ashbyhq.com/${currentOrg}/${j.id}`
   }));
 
-  // Populate filters
+  const teams = [...new Set(allJobs.map(j => j.team))].sort();
   document.getElementById("team").innerHTML = `<option value="">All</option>` +
-    [...new Set(allJobs.map(j => j.team))].sort().map(t => `<option>${t}</option>`).join("");
+    teams.map(t => `<option>${t}</option>`).join("");
 
-  document.getElementById("location").innerHTML = `<option value="">All</option>` +
-    [...new Set(allJobs.map(j => j.location))].sort().map(l => `<option>${l}</option>`).join("");
+  const locations = [...new Set(allJobs.map(j => j.location))].sort();
+  const dropdown = document.getElementById("location-dropdown");
+  dropdown.innerHTML = `
+    <div class="checkbox-item">
+      <input type="checkbox" id="loc-all" checked onchange="handleAllLocation(this)">
+      <label for="loc-all">All</label>
+    </div>
+    ${locations.map((loc, idx) => `
+      <div class="checkbox-item">
+        <input type="checkbox" id="loc-${idx}" value="${loc}" onchange="handleLocationChange()">
+        <label for="loc-${idx}">${loc}</label>
+      </div>
+    `).join("")}
+  `;
+  updateLocationSummary();
 
+  const workplaces = [...new Set(allJobs.map(j => j.workplace))].filter(Boolean).sort();
   document.getElementById("workplace").innerHTML = `<option value="">All</option>` +
-    [...new Set(allJobs.map(j => j.workplace))].filter(Boolean).sort().map(w => `<option>${w}</option>`).join("");
+    workplaces.map(w => `<option>${w}</option>`).join("");
 
+  const employments = [...new Set(allJobs.map(j => j.employment))].filter(Boolean).sort();
   document.getElementById("employment").innerHTML = `<option value="">All</option>` +
-    [...new Set(allJobs.map(j => j.employment))].filter(Boolean).sort().map(e => `<option>${e}</option>`).join("");
+    employments.map(e => `<option>${e}</option>`).join("");
 
   filteredJobs = [...allJobs];
   applyFilters();
@@ -346,27 +439,79 @@ async function loadJobs() {
   document.getElementById("status").textContent = `Loaded ${allJobs.length} jobs`;
 }
 
-// ────────────────────────────────────────────────
+function toggleDropdown() {
+  const dropdown = document.getElementById("location-dropdown");
+  dropdown.classList.toggle("open");
+}
+
+function handleAllLocation(checkbox) {
+  if (checkbox.checked) {
+    document.querySelectorAll('#location-dropdown input[type="checkbox"]:not(#loc-all)').forEach(cb => cb.checked = false);
+  }
+  updateLocationSummary();
+  applyFilters();
+}
+
+function handleLocationChange() {
+  const allCb = document.getElementById("loc-all");
+  const anyChecked = document.querySelector('#location-dropdown input[type="checkbox"]:not(#loc-all):checked');
+  if (anyChecked) allCb.checked = false;
+  updateLocationSummary();
+  applyFilters();
+}
+
+function updateLocationSummary() {
+  const allChecked = document.getElementById("loc-all").checked;
+  const selected = Array.from(document.querySelectorAll('#location-dropdown input[type="checkbox"]:not(#loc-all):checked'))
+                       .map(cb => cb.value);
+  const summaryEl = document.getElementById("location-summary");
+  if (allChecked || selected.length === 0) {
+    summaryEl.textContent = "All";
+  } else if (selected.length <= 2) {
+    summaryEl.textContent = selected.join(", ");
+  } else {
+    summaryEl.textContent = `${selected.length} selected`;
+  }
+}
+
+document.addEventListener('click', function(e) {
+  const field = document.getElementById("location-field");
+  const dropdown = document.getElementById("location-dropdown");
+  if (!field.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.classList.remove("open");
+  }
+});
+
 function applyFilters() {
   let jobs = [...allJobs];
 
-  const f = id => document.getElementById(id).value;
-  if (f("team"))     jobs = jobs.filter(j => j.team     === f("team"));
-  if (f("location"))  jobs = jobs.filter(j => j.location  === f("location"));
-  if (f("workplace")) jobs = jobs.filter(j => j.workplace === f("workplace"));
-  if (f("employment"))jobs = jobs.filter(j => j.employment=== f("employment"));
+  const teamVal = document.getElementById("team").value;
+  if (teamVal) jobs = jobs.filter(j => j.team === teamVal);
 
-  const dateF = f("date");
-  if (dateF !== "all") {
+  const allLocsChecked = document.getElementById("loc-all").checked;
+  const selectedLocs = Array.from(document.querySelectorAll('#location-dropdown input[type="checkbox"]:not(#loc-all):checked'))
+                           .map(cb => cb.value);
+  if (!allLocsChecked && selectedLocs.length > 0) {
+    jobs = jobs.filter(j => selectedLocs.includes(j.location));
+  }
+
+  const workplaceVal = document.getElementById("workplace").value;
+  if (workplaceVal) jobs = jobs.filter(j => j.workplace === workplaceVal);
+
+  const employmentVal = document.getElementById("employment").value;
+  if (employmentVal) jobs = jobs.filter(j => j.employment === employmentVal);
+
+  const dateVal = document.getElementById("date").value;
+  if (dateVal !== "all") {
     const now = Date.now();
     const limits = { "24h": 86400000, "3d": 259200000, "7d": 604800000, "30d": 2592000000 };
     jobs = jobs.filter(j => {
       const d = new Date(j.posted);
-      return (now - d.getTime()) <= limits[dateF];
+      return (now - d.getTime()) <= limits[dateVal];
     });
   }
 
-  const q = f("search").trim().toLowerCase();
+  const q = document.getElementById("search").value.trim().toLowerCase();
   if (q) {
     jobs = jobs.filter(j =>
       j.title.toLowerCase().includes(q) ||
@@ -374,7 +519,6 @@ function applyFilters() {
     );
   }
 
-  // Sort
   jobs.sort((a,b) => {
     let va = a[sortCol], vb = b[sortCol];
     if (sortCol === "posted") {
@@ -393,7 +537,6 @@ function applyFilters() {
   updateSortIndicators();
 }
 
-// ────────────────────────────────────────────────
 function renderPage(page) {
   currentPage = page;
   const tbody = document.getElementById("job-body");
@@ -460,7 +603,6 @@ function renderPagination(total) {
   addBtn("Next →", currentPage === pages, () => currentPage < pages && renderPage(currentPage + 1));
 }
 
-// ────────────────────────────────────────────────
 function updateSortIndicators() {
   document.querySelectorAll("th[data-sort]").forEach(th => {
     th.classList.remove("sorted-asc", "sorted-desc");
@@ -482,13 +624,12 @@ document.querySelectorAll("th[data-sort]").forEach(th => {
   };
 });
 
-["team","location","workplace","employment","date","search"].forEach(id => {
+["team", "workplace", "employment", "date", "search"].forEach(id => {
   const el = document.getElementById(id);
   if (el.tagName === "INPUT") el.oninput = applyFilters;
   else el.onchange = applyFilters;
 });
 
-// ────────────────────────────────────────────────
 function openSidebar(job) {
   document.getElementById("sidebar-content").innerHTML = `
     <strong style="font-size:1.3rem;">${job.title}</strong><br><br>
@@ -517,7 +658,7 @@ function closeSidebar() {
 }
 
 function changeOrg() {
-  const org = prompt("Enter Ashby organization name (e.g. snowflake, whatnot, linear, ramp):", currentOrg);
+  const org = prompt("Enter Ashby organization name (e.g. snowflake, ramp, linear, whatnot):", currentOrg);
   if (org && org.trim()) {
     currentOrg = org.trim().toLowerCase();
     loadJobs();
@@ -525,9 +666,16 @@ function changeOrg() {
 }
 
 function clearFilters() {
-  ["team","location","workplace","employment","date","search"].forEach(id => {
-    document.getElementById(id).value = id === "date" ? "all" : "";
-  });
+  document.getElementById("team").value = "";
+  document.getElementById("workplace").value = "";
+  document.getElementById("employment").value = "";
+  document.getElementById("date").value = "all";
+  document.getElementById("search").value = "";
+
+  document.getElementById("loc-all").checked = true;
+  document.querySelectorAll('#location-dropdown input[type="checkbox"]:not(#loc-all)').forEach(cb => cb.checked = false);
+  updateLocationSummary();
+
   applyFilters();
 }
 
