@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Board | ATS Integrations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            margin-bottom: 50px;
+        }
+
+        .card-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            width: 280px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .greenhouse .icon {
+            background: linear-gradient(135deg, #00a79d, #007367);
+        }
+
+        .ashby .icon {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+        }
+
+        .card h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover .btn {
+            opacity: 0.9;
+        }
+
+        .footer {
+            margin-top: 50px;
+            color: white;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .card {
+                width: 100%;
+                max-width: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Job Board</h1>
+        <p class="subtitle">Select an ATS platform to view jobs</p>
+
+        <div class="card-container">
+            <!-- Greenhouse Card -->
+            <a href="greenhouse.html" class="card greenhouse">
+                <div class="icon">G</div>
+                <h2>Greenhouse</h2>
+                <p>View job listings from companies using Greenhouse ATS</p>
+                <span class="btn">Browse Jobs →</span>
+            </a>
+
+            <!-- Ashby Card -->
+            <a href="ashby.html" class="card ashby">
+                <div class="icon">A</div>
+                <h2>Ashby</h2>
+                <p>Explore opportunities from Ashby-powered companies</p>
+                <span class="btn">Browse Jobs →</span>
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>⬇️ Click a card to navigate to the job listings</p>
+        </div>
+    </div>
+</body>
+</html>
