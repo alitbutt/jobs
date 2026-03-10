@@ -362,7 +362,7 @@ let filteredJobs = [];
 let sortCol = "posted";
 let sortDir = -1; // -1 = newest first
 let currentPage = 1;
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 100;
 
 const API_URL = org => `https://api.ashbyhq.com/posting-api/job-board/${org}?includeCompensation=true`;
 
@@ -684,3 +684,4 @@ loadJobs();
 </script>
 </body>
 </html>
+
