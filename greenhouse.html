@@ -609,6 +609,7 @@ function renderLocationMenu(locations) {
 
     item.addEventListener("click", e => {
       if (e.target !== cb) {
+		e.preventDefault();
         cb.checked = !cb.checked;
         cb.dispatchEvent(new Event("change"));
       }
@@ -704,4 +705,5 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
+
 
