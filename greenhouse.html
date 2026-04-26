@@ -358,7 +358,7 @@
         <th data-sort="dept">Department</th>
         <th data-sort="location">Location</th>
         <th data-sort="first_published">First Published</th>
-        <th data-sort="date">Last Updated</th>
+        <th data-sort="displayDate">Last Updated</th>
       </tr>
     </thead>
     <tbody id="job-body"></tbody>
@@ -527,7 +527,7 @@ function applyFilters() {
 
   jobs.sort((a, b) => {
     let va = a[sortCol], vb = b[sortCol];
-    if (sortCol === "date" || sortCol === "first_published") {
+    if (sortCol === "displayDate" || sortCol === "first_published") {
       va = va ? new Date(va) : new Date(0);
       vb = vb ? new Date(vb) : new Date(0);
       return sortDir * (va - vb);
@@ -700,7 +700,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (sortCol === col) sortDir *= -1;
       else {
         sortCol = col;
-        sortDir = (col === "date" || col === "first_published") ? -1 : 1;
+        sortDir = (col === "displayDate" || col === "first_published") ? -1 : 1;
       }
       applyFilters();
     });
